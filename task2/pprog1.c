@@ -25,13 +25,18 @@ int main(int argc, char** argv) {
     // Рассылаем массив всем процессам
     MPI_Bcast(a, n, MPI_INT, 0, MPI_COMM_WORLD);
 
-    // Циклическое распределение: каждый процесс берет элементы через proc_count
+    // --- Блочное распределение ---
+    int chunk = n / proc_count;                     // Размер блока
+    int start = proc_this * chunk;                  // Начало блока
+    int end = (proc_this == proc_count - 1) ? n : start + chunk; // Конец блока
+
     int partial_sum = 0;
-    for (int i = proc_this; i < n; i += proc_count) {
+    for (int i = start; i < end; i++) {
         partial_sum += a[i];
     }
 
-    printf("Process %d/%d: partial sum = %d\n", proc_this, proc_count, partial_sum);
+    printf("Process %d/%d: handles elements [%d..%d), partial sum = %d\n",
+           proc_this, proc_count, start, end, partial_sum);
 
     // Собираем общую сумму на процессе 0
     int total_sum = 0;
